@@ -1,2 +1,24 @@
-Dieses Repository enthält zwei SAS-Projekt Prototypen, die den Import, die Analyse und die Visualisierung von Unternehmensdaten demonstriert. 
-Und die dazugehörigen Excel-Datein.
+Dieses Repository enthält zwei SAS-Projekte sowie die zugehörigen Excel-Dateien, die den Import, die Analyse und die Visualisierung von Unternehmensdaten demonstrieren.
+
+Inhalte:
+Sensordatenanalyse.sas – Auswertung und Visualisierung von Sensordaten (Pumpe A und Pumpe B)
+
+Verkaufsanalyse.sas – Analyse von Verkaufszahlen, Reklamationen und Rückläufern
+
+Excel-Dateien:
+
+sensordaten_produktion_pumpwerk_pumpeA.xlsx
+
+sensordaten_produktion_pumpwerk_pumpeB.xlsx
+
+kundenanalyse_pumpwerk_januar-april.xlsx
+
+Technologien:
+SAS Studio
+
+Apache Hadoop (Data Lake Infrastruktur im Hintergrund)
+
+GitHub zur Versionierung
+
+Projektbeschreibung:
+Die Pumpe GmbH nutzt einen Data Lake auf Basis von Apache Hadoop, um große Mengen an Sensordaten und Verkaufsdaten zentral zu speichern. Mit Hilfe von SAS Studio werden diese Daten anschließend analysiert, um Anomalien zu erkennen, Qualitätsprobleme zu identifizieren und Optimierungspotenziale im Betrieb aufzudecken.
