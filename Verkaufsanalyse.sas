@@ -102,26 +102,9 @@ proc corr data=verkaufsanalyse;
     title "Korrelation: Bewertung und Folgekäufe";
 run;
 
-/* =============================================
-   9. Einflussfaktoren auf Folgekäufe (Regression)
-============================================= */
-proc reg data=verkaufsanalyse;
-    model Folgekäufe = 'Durchschnitliche Bewertung'n Rückläufer Reklamationen;
-    title "Einflussfaktoren auf Folgekäufe (Regression)";
-run;
-/* TEST 
-/* PDF starten */
-ods pdf file="/home/u64212633/sasuser.v94/kpi_dashboard_pumpwerk.pdf" style=journal notoc;
-
-/* Titel */
-title1 j=c font=Arial bold height=16pt "Pumpwerk GmbH – KPI-Dashboard";
-title2 j=c font=Arial height=12pt "Kunden- & Marktanalyse (Januar–April)";
-title3 j=c font=Arial height=10pt "Stand: %sysfunc(today(), date9.)";
-proc odstext; run;
-title;
 
 /* =============================================
-   1. Ø Bewertung & Rückläufer je Vertriebsweg
+   9. Ø Bewertung & Rückläufer je Vertriebsweg
 ============================================= */
 proc means data=verkaufsanalyse mean maxdec=2 nway;
     class Vertriebsweg;
@@ -131,7 +114,7 @@ run;
 
 
 /* =============================================
-   2. Gesamtverkäufe je Region (Balkendiagramm)
+   10. Gesamtverkäufe je Region (Balkendiagramm)
 ============================================= */
 proc sql;
     create table region_summe as
@@ -147,7 +130,7 @@ run;
 
 
 /* =============================================
-   3. Rücklaufquote je Produkt
+   11. Rücklaufquote je Produkt
 ============================================= */
 data ruecklaufrate;
     set verkaufsanalyse;
@@ -162,7 +145,7 @@ run;
 
 
 /* =============================================
-   4. Folgekäufe je Produkt (TOP 5)
+   12. Folgekäufe je Produkt (TOP 5)
 ============================================= */
 proc sql;
     create table folge_top5 as
@@ -179,7 +162,7 @@ run;
 
 
 /* =============================================
-   5. Verlauf: Verkäufe über Zeit je Produkt (= Pumpe)
+   13. Verlauf: Verkäufe über Zeit je Produkt (= Pumpe)
 ============================================= */
 
 /* Vorher sortieren für sauberes Linien-Diagramm */
