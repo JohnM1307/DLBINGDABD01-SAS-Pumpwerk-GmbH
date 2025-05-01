@@ -1,3 +1,10 @@
+/* =============================================
+   SAS Projekt: Sensordatenanalyse Pumpwerk GmbH
+   Ziel: Sensordaten von 2 Pumpen vergleichen 
+============================================= */
+/* =============================================
+   1. Datenimport aus Excel + Formatierrung + Zusammenfügung 
+============================================= */
 /* Import Pumpe A */
 proc import datafile="/home/u64212633/sasuser.v94/sensordaten_produktion_pumpwerk_pumpeA.xlsx"
     out=pumpe_a
@@ -29,10 +36,10 @@ run;
 data sensordaten_gesamt;
     set pumpe_a pumpe_b; /* Kombiniert die Daten von Pumpe A und B */
 run;
-/* --------------------------------------------
-   1. Verteilungsanalyse 
+/* =============================================
+   2. Verteilungsanalyse 
    → zeigt Statistiken, Histogramm & Normalverteilung
--------------------------------------------- */
+============================================= */
 proc univariate data=sensordaten_gesamt noprint;
     var 
         'Drehzahl (RPM)'n 
@@ -45,11 +52,11 @@ proc univariate data=sensordaten_gesamt noprint;
     qqplot / normal(mu=est sigma=est);       /* QQ-Plot → zeigt Normalverteilung */
 run;
 
-/* --------------------------------------------
+/* =============================================
    2. Ermittlung von IQR-basierten Grenzwerten
    → Grundlage für Ausreißererkennung
    (angepasst auf 1.0 * IQR für empfindlichere Erkennung)
--------------------------------------------- */
+============================================= */
 proc univariate data=sensordaten_gesamt noprint;
     var 
         'Drehzahl (RPM)'n 
@@ -61,9 +68,10 @@ proc univariate data=sensordaten_gesamt noprint;
         q3=dreh_q3 durchfluss_q3 spannung_q3 temp_q3;
 run;
 
-/* --------------------------------------------
+/* =============================================
    3. Berechnung der IQR-Grenzen (1.0 * IQR)
--------------------------------------------- */
+      → Für spätere Ausreißererkennung
+=============================================*/
 data grenzen_berechnet;
     set grenzen;
     dreh_iqr = dreh_q3 - dreh_q1;
@@ -83,9 +91,10 @@ data grenzen_berechnet;
     temp_ober = temp_q3 + 1.0 * temp_iqr;
 run;
 
-/* --------------------------------------------
+/*=============================================
    4. Vergleich der Originaldaten mit den IQR-Grenzen + Empfehlungen
--------------------------------------------- */
+      → Ausreißer markieren, Empfehlung ergänzen
+============================================= */
 data ausreisser; 
     if _n_ = 1 then set grenzen_berechnet;  
     set sensordaten_gesamt;                
@@ -118,10 +127,11 @@ proc print data=ausreisser;
     title "Identifizierte Ausreißer mit Empfehlungen für Wartung";
 run;
 
-/* --------------------------------------------
+/* =============================================
    5. Visualisierung: Boxplots pro Pumpe
    → zeigen Ausreißer und Verteilung je Pumpe
--------------------------------------------- */
+   → Verteilung & Ausreißer sichtbar machen
+=============================================*/
 proc sgplot data=sensordaten_gesamt;
     vbox 'Drehzahl (RPM)'n / category=pumpe;
     vbox 'Durchflussmenge (Liter/Minute)'n / category=pumpe;
@@ -130,19 +140,19 @@ proc sgplot data=sensordaten_gesamt;
     title "Boxplots zur Ausreißererkennung pro Pumpe";
 run;
 
-/* --------------------------------------------
+/* =============================================
    6. Streudiagramm: Drehzahl vs. Durchfluss
-   → zeigt mögliche Korrelation oder Muster
--------------------------------------------- */
+   → zeigt mögliche Korrelation oder Muster erkennbar ?
+============================================= */
 proc sgplot data=sensordaten_gesamt;
     scatter x='Drehzahl (RPM)'n y='Durchflussmenge (Liter/Minute)'n / group=pumpe;
     title "Zusammenhang: Drehzahl vs. Durchflussmenge (Pumpe A & B)";
 run;
 
-/* --------------------------------------------
+/*=============================================
    7. Clusteranalyse: Gruppenbildung nach Sensorwerten
    → erkennt typische Betriebszustände automatisch
--------------------------------------------- */
+============================================= */
 proc fastclus data=sensordaten_gesamt maxclusters=3 out=cluster_ergebnis;
     var 
         'Drehzahl (RPM)'n 
@@ -156,25 +166,25 @@ proc sgplot data=cluster_ergebnis;
     title "Clusteranalyse: Betriebszustände der Pumpen";
 run;
 
-/* --------------------------------------------
+/* =============================================
    8. Liniendiagramm: Temperaturverlauf über Zeit
--------------------------------------------- */
+============================================= */
 proc sgplot data=sensordaten_gesamt;
     series x=Zeitstempel y='Motortemperatur'n / group=pumpe;
     title "Motortemperatur im Zeitverlauf (Pumpe A & B)";
 run;
 
-/* --------------------------------------------
+/* =============================================
    9. Heatmap: Häufigkeit von Drehzahl vs. Durchfluss
--------------------------------------------- */
+============================================= */
 proc sgplot data=sensordaten_gesamt;
     heatmap x='Drehzahl (RPM)'n y='Durchflussmenge (Liter/Minute)'n;
     title "Dichtekarte: Drehzahl vs. Durchflussmenge";
 run;
 
-/* --------------------------------------------
+/* =============================================
    10. Balkendiagramm: Anzahl der Anomalien pro Pumpe
--------------------------------------------- */
+============================================= */
 proc freq data=ausreisser;
     tables pumpe / out=anomalie_anzahl;
 run;
@@ -183,20 +193,11 @@ proc sgplot data=anomalie_anzahl;
     vbar pumpe / response=count datalabel;
     title "Anzahl erkannter Anomalien pro Pumpe";
 run;
-/* Test 
-/* =============================================
-   SAS Projekt: Erweiterte Analyse der Pumpendaten
-   Module:
-   1. Frühwarnsystem (Schwellenwert + Zeitlogik)
-   2. Dynamisches KPI-Dashboard
-   3. Korrelation & Regression
-   4. Vorhersagemodell (Maschinelles Lernen)
-============================================= */
-
 
 /* =============================================
-   1. Frühwarnsystem
+   11. "Frühwarnsystem"
    → Meldung, wenn innerhalb 2 Stunden mehr als 2 Anomalien auftreten
+   → Meldung wird in Tabelle geschrieben
 ============================================= */
 
 /* Basis: vorhandene Ausreißerdaten aus vorherigem Schritt */
@@ -231,11 +232,11 @@ run;
 
 
 /* =============================================
-   2. KPI-Dashboard
+   12. KPI-Dashboard
    → Durchschnittswerte, Anomalien pro Woche, Auslastung
 ============================================= */
 
-/* 2a. Durchschnittswerte pro Pumpe */
+/* 12a. Durchschnittswerte pro Pumpe */
 proc means data=sensordaten_gesamt mean maxdec=1;
     class pumpe;
     var 'Drehzahl (RPM)'n 'Spannung (Volt)'n 'Durchflussmenge (Liter/Minute)'n 'Motortemperatur'n;
@@ -243,29 +244,15 @@ proc means data=sensordaten_gesamt mean maxdec=1;
 run;
 
 
-/* 2b. Auslastung = Summe Durchflussmenge je Pumpe */
+/* 12b. Auslastung = Summe Durchflussmenge je Pumpe */
 proc means data=sensordaten_gesamt sum maxdec=0;
     class pumpe;
     var 'Durchflussmenge (Liter/Minute)'n;
     title "Pumpenauslastung (Summe Durchfluss)";
 run;
 
-
 /* =============================================
-   3. Maschinelles Lernen / Vorhersage
-============================================= */
-
-/* Entscheidungsbaum-Modell zur Temperaturvorhersage (Regression) */
-proc hpsplit data=sensordaten_gesamt seed=12345;
-    class pumpe;
-    model 'Motortemperatur'n = 'Drehzahl (RPM)'n 'Spannung (Volt)'n 'Durchflussmenge (Liter/Minute)'n pumpe;
-    grow variance; /* <- KORREKTE Methode für Regression */
-    prune costcomplexity;
-    title "Vorhersage-Modell: Motortemperatur (Regressionsbaum)";
-run;
-/* Test 2 
-/* =============================================
-   SAS Projekt: Analysebericht zu Anomalien und Temperatur
+   13. SAS Projekt: Analysebericht zu Anomalien und Temperatur
    Export als kompakter PDF-Report
 ============================================= */
 
